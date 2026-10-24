@@ -22,8 +22,8 @@ public class Invoice {
     private String invoiceNumber;
     private LocalDate invoiceDate;
 
-    private String SellerGstin;
-    private String BuyerGstin;
+    private String sellerGstin;
+    private String buyerGstin;
 
     private String sellerStateCode;
     private String buyerStateCode;
