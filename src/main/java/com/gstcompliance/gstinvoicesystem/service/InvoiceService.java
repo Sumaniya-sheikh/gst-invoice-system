@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,14 +21,20 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class InvoiceService{
+public class InvoiceService {
+
     private final InvoiceRepository invoiceRepository;
+
+    @Transactional(readOnly = true)
+    public List<Invoice> findAll() {
+        return invoiceRepository.findAll();
+    }
 
     @Transactional
     public int saveInvoicesFromCsv(MultipartFile file) {
         List<Invoice> invoices = new ArrayList<>();
 
-      try (BufferedReader reader = new BufferedReader(
+        try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
             reader.readLine(); // skip header
             int rowNumber = 1;
@@ -45,7 +50,6 @@ public class InvoiceService{
 
         invoiceRepository.saveAll(invoices);
         return invoices.size();
-
     }
 
     private Invoice parseRow(String line, int rowNumber) {
@@ -54,7 +58,7 @@ public class InvoiceService{
             throw new IllegalArgumentException(
                 "Row " + rowNumber + ": expected 11 columns but found " + fields.length);
         }
- try {
+        try {
             Invoice inv = new Invoice();
             inv.setInvoiceNumber(fields[0].trim());
             inv.setInvoiceDate(LocalDate.parse(fields[1].trim()));
@@ -69,7 +73,8 @@ public class InvoiceService{
             inv.setTotalInvoiceValue(new BigDecimal(fields[10].trim()));
             return inv;
         } catch (RuntimeException e) {
-            throw new IllegalArgumentException("Row " + rowNumber + ": invalid value (" + e.getMessage() + ")");
+            throw new IllegalArgumentException(
+                "Row " + rowNumber + ": invalid value (" + e.getMessage() + ")");
         }
     }
 }
