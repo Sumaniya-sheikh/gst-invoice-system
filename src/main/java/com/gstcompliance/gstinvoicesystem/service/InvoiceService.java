@@ -66,7 +66,7 @@ public class InvoiceService {
             inv.setBuyerGstin(fields[3].trim());
             inv.setSellerStateCode(fields[4].trim());
             inv.setBuyerStateCode(fields[5].trim());
-            inv.setTaxableValue(new BigDecimal(fields[6].trim()));
+           inv.setTaxableValue(new BigDecimal(fields[6].trim()));
             inv.setCgstAmount(new BigDecimal(fields[7].trim()));
             inv.setSgstAmount(new BigDecimal(fields[8].trim()));
             inv.setIgstAmount(new BigDecimal(fields[9].trim()));

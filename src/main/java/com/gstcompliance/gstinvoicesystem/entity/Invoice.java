@@ -28,7 +28,7 @@ public class Invoice {
     private String sellerStateCode;
     private String buyerStateCode;
 
-    private BigDecimal TaxableValue;
+    private BigDecimal taxableValue;
 
     private BigDecimal cgstAmount;
     private BigDecimal sgstAmount;
