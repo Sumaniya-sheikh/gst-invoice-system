@@ -23,7 +23,7 @@ public class InvoiceController {
 
     @PostMapping("/upload")
     public ResponseEntity<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) {
-        int saved = invoiceService.importCsv(file);
+       int saved = invoiceService.saveInvoicesFromCsv(file);
         return ResponseEntity.ok(Map.of("message", "Upload successful", "invoicesSaved", saved));
     }
 
