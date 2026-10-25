@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gstcompliance.gstinvoicesystem.entity.Invoice;
+import com.gstcompliance.gstinvoicesystem.entity.InvoiceIssue;
 import com.gstcompliance.gstinvoicesystem.service.InvoiceService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,10 @@ public class InvoiceController {
 
     private final InvoiceService invoiceService;
 
-      @GetMapping
+      @GetMapping("/issues")
+public List<InvoiceIssue> getIssues() {
+    return invoiceService.findAllIssues();
+}
   public List<Invoice> getAll() {
       return invoiceService.findAll();
   }

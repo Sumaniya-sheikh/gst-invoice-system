@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.gstcompliance.gstinvoicesystem.entity.Invoice;
+import com.gstcompliance.gstinvoicesystem.entity.InvoiceIssue;
+import com.gstcompliance.gstinvoicesystem.repository.InvoiceIssueRepository;
 import com.gstcompliance.gstinvoicesystem.repository.InvoiceRepository;
+import com.gstcompliance.gstinvoicesystem.validation.GstinValidator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,10 +27,16 @@ import lombok.RequiredArgsConstructor;
 public class InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
+    private final InvoiceIssueRepository issueRepository;
 
     @Transactional(readOnly = true)
     public List<Invoice> findAll() {
         return invoiceRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<InvoiceIssue> findAllIssues() {
+        return issueRepository.findAll();
     }
 
     @Transactional
@@ -48,8 +57,27 @@ public class InvoiceService {
             throw new UncheckedIOException("Could not read uploaded file", e);
         }
 
-        invoiceRepository.saveAll(invoices);
-        return invoices.size();
+        List<Invoice> saved = invoiceRepository.saveAll(invoices);
+
+        List<InvoiceIssue> issues = new ArrayList<>();
+        for (Invoice inv : saved) {
+            flagGstin(issues, inv, "Seller", inv.getSellerGstin());
+            flagGstin(issues, inv, "Buyer", inv.getBuyerGstin());
+        }
+        issueRepository.saveAll(issues);
+
+        return saved.size();
+    }
+
+    private void flagGstin(List<InvoiceIssue> issues, Invoice inv, String party, String gstin) {
+        GstinValidator.validate(gstin).ifPresent(f -> {
+            InvoiceIssue issue = new InvoiceIssue();
+            issue.setInvoiceId(inv.getId());
+            issue.setRuleCode(f.ruleCode());
+            issue.setSeverity("ERROR");
+            issue.setMessage(party + " GSTIN: " + f.message());
+            issues.add(issue);
+        });
     }
 
     private Invoice parseRow(String line, int rowNumber) {
@@ -66,7 +94,7 @@ public class InvoiceService {
             inv.setBuyerGstin(fields[3].trim());
             inv.setSellerStateCode(fields[4].trim());
             inv.setBuyerStateCode(fields[5].trim());
-           inv.setTaxableValue(new BigDecimal(fields[6].trim()));
+            inv.setTaxableValue(new BigDecimal(fields[6].trim()));
             inv.setCgstAmount(new BigDecimal(fields[7].trim()));
             inv.setSgstAmount(new BigDecimal(fields[8].trim()));
             inv.setIgstAmount(new BigDecimal(fields[9].trim()));
