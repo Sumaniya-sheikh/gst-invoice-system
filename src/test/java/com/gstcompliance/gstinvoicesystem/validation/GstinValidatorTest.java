@@ -1,11 +1,11 @@
 package com.gstcompliance.gstinvoicesystem.validation;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-class GstinValidatorTest {
+public class GstinValidatorTest {
+
 
     @Test
     void validGstinsPass() {
@@ -17,13 +17,28 @@ class GstinValidatorTest {
 
     @Test
     void truncatedGstinFailsOnLength() {
-        var f = GstinValidator.validate("09AABCU9603").orElseThrow();
-        assertEquals("GSTIN_LENGTH", f.ruleCode());
+        assertEquals("GSTIN_LENGTH", GstinValidator.validate("09AABCU9603").orElseThrow().ruleCode());
     }
 
     @Test
     void wrongCheckCharacterFailsOnChecksum() {
-        var f = GstinValidator.validate("09AABCU9603R1ZM").orElseThrow();
-        assertEquals("GSTIN_CHECKSUM", f.ruleCode());
+        assertEquals("GSTIN_CHECKSUM", GstinValidator.validate("09AABCU9603R1ZM").orElseThrow().ruleCode());
+    }
+
+    @Test
+    void invalidStateCodeFails() {
+        String base = "40AABCU9603R1Z";
+        String g = base + GstinValidator.checkChar(base);
+        assertEquals("GSTIN_STATE", GstinValidator.validate(g).orElseThrow().ruleCode());
+    }
+
+    @Test
+    void whitespaceAndLowercaseAreNormalized() {
+        assertTrue(GstinValidator.validate(" 27aapfu0939f1zv ").isEmpty());
+    }
+
+    @Test
+    void nullIsMissing() {
+        assertEquals("GSTIN_MISSING", GstinValidator.validate(null).orElseThrow().ruleCode());
     }
 }
