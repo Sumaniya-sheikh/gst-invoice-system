@@ -10,13 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-
 @Entity
 @Table(name = "invoices")
 @Data
 public class Invoice {
+
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String invoiceNumber;
@@ -35,5 +35,5 @@ public class Invoice {
     private BigDecimal igstAmount;
 
     private BigDecimal totalInvoiceValue;
-
+    private String riskLevel;
 }
