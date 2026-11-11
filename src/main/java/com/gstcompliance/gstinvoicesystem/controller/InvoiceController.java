@@ -69,4 +69,16 @@ public ResponseEntity<List<Invoice>> exportJson() {
             .contentType(MediaType.APPLICATION_JSON)
             .body(invoices);
 }
+
+@PostMapping("/revalidate")
+public ResponseEntity<Map<String, Object>> revalidate() {
+    int count = invoiceService.revalidateAll();
+
+    return ResponseEntity.ok(
+        Map.of(
+            "message", "Revalidation complete",
+            "invoicesRevalidated", count
+        )
+    );
+}
 }

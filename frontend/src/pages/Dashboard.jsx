@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
-  getInvoices,
-  uploadCsv,
-  exportInvoicesCsv,
   getInvoiceIssues,
 } from "../services/invoiceService";
 
@@ -11,75 +8,30 @@ import {
   FileText,
   ShieldCheck,
   AlertTriangle,
-  Upload,
-  Download,
 } from "lucide-react";
 
 import Header from "../components/Header";
 import StatCard from "../components/StatCard";
-import SearchBar from "../components/SearchBar";
 import InvoiceTable from "../components/InvoiceTable";
 
-function Dashboard({
-  invoices,
-  loading,
-  error,
-  searchTerm,
-  setSearchTerm,
-  onInvoicesUpdated,
-}) {
+function Dashboard({ invoices, loading, error }) {
   const [activeTab, setActiveTab] = useState("invoices");
   const [invoiceIssues, setInvoiceIssues] = useState([]);
   const [issueSearchTerm, setIssueSearchTerm] = useState("");
   const [severityFilter, setSeverityFilter] = useState("ALL");
 
-  const fileInputRef = useRef(null);
-
-  const [uploading, setUploading] = useState(false);
-  const [uploadMessage, setUploadMessage] = useState("");
-  const [exportMessage, setExportMessage] = useState("");
-
-  // Fetch invoice issues when dashboard loads
   useEffect(() => {
     getInvoiceIssues()
       .then((data) => setInvoiceIssues(data))
       .catch((error) => console.error(error));
   }, []);
 
-  // Export invoices
-  const handleExport = () => {
-    exportInvoicesCsv();
-    setExportMessage(
-      "CSV download started! Check your Downloads folder."
-    );
-  };
+  // Show the 5 latest uploaded invoices
+  const recentInvoices = [...invoices]
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .slice(0, 5);
 
-  // Upload CSV
-  const handleCsvUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    setUploadMessage("");
-
-    try {
-      await uploadCsv(file);
-
-      const updatedInvoices = await getInvoices();
-      onInvoicesUpdated(updatedInvoices);
-
-      const updatedIssues = await getInvoiceIssues();
-      setInvoiceIssues(updatedIssues);
-
-      setUploadMessage("CSV uploaded successfully!");
-    } catch (error) {
-      setUploadMessage(error.message);
-    } finally {
-      setUploading(false);
-      event.target.value = "";
-    }
-  };
-    const filteredIssues = invoiceIssues.filter((issue) => {
+  const filteredIssues = invoiceIssues.filter((issue) => {
     const matchesSearch =
       issue.message?.toLowerCase().includes(issueSearchTerm.toLowerCase()) ||
       issue.ruleCode?.toLowerCase().includes(issueSearchTerm.toLowerCase()) ||
@@ -90,23 +42,25 @@ function Dashboard({
 
     return matchesSearch && matchesSeverity;
   });
+
   return (
-        
-    <main className="flex-1 p-8">
+    <main className="flex-1 min-h-screen bg-[#F5F0E9] p-6 md:p-8 text-[#493B35]">
+
       <Header />
 
       {/* Summary Cards */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+
         <StatCard
           icon={FileText}
           title="Total Invoices"
           value={invoices.length}
-          color="text-blue-600"
+          color="text-[#96745B]"
         />
 
         <StatCard
           icon={ShieldCheck}
-          title="Low Risk"
+          title="No Issues"
           value={invoices.filter((inv) => inv.riskLevel === "LOW").length}
           color="text-green-600"
         />
@@ -115,7 +69,7 @@ function Dashboard({
           icon={AlertTriangle}
           title="Medium Risk"
           value={invoices.filter((inv) => inv.riskLevel === "MEDIUM").length}
-          color="text-yellow-500"
+          color="text-yellow-600"
         />
 
         <StatCard
@@ -124,16 +78,18 @@ function Dashboard({
           value={invoices.filter((inv) => inv.riskLevel === "HIGH").length}
           color="text-red-600"
         />
+
       </section>
 
       {/* Dashboard Tabs */}
-      <div className="flex gap-6 border-b mb-6">
+      <div className="flex gap-6 border-b border-[#E3D6C9] mb-6">
+
         <button
           onClick={() => setActiveTab("invoices")}
-          className={`pb-3 font-semibold ${
+          className={`pb-3 font-semibold transition-colors ${
             activeTab === "invoices"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-slate-500"
+              ? "text-[#805D48] border-b-2 border-[#96745B]"
+              : "text-[#927F71] hover:text-[#493B35]"
           }`}
         >
           Recent Invoices
@@ -141,145 +97,98 @@ function Dashboard({
 
         <button
           onClick={() => setActiveTab("issues")}
-          className={`pb-3 font-semibold ${
+          className={`pb-3 font-semibold transition-colors ${
             activeTab === "issues"
-              ? "text-blue-600 border-b-2 border-blue-600"
-              : "text-slate-500"
+              ? "text-[#805D48] border-b-2 border-[#96745B]"
+              : "text-[#927F71] hover:text-[#493B35]"
           }`}
         >
           Invoice Issues
+
           {invoiceIssues.length > 0 && (
-            <span className="ml-2 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
+            <span className="ml-2 bg-[#F0DFD2] text-[#805D48] px-2 py-1 rounded-full text-xs">
               {invoiceIssues.length}
             </span>
           )}
         </button>
+
       </div>
 
       {/* Recent Invoices Tab */}
       {activeTab === "invoices" && (
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3 className="text-xl font-bold text-slate-800">
-                Recent Invoices
-              </h3>
+        <section className="bg-white border border-[#E9DED3] rounded-2xl shadow-sm p-6">
 
-              <p className="text-sm text-slate-500">
-                Invoice records and risk status
-              </p>
-            </div>
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-[#493B35]">
+              Recent Invoices
+            </h3>
 
-            <div className="flex gap-3">
-              <input
-                type="file"
-                accept=".csv"
-                ref={fileInputRef}
-                onChange={handleCsvUpload}
-                className="hidden"
-              />
-
-              <button
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                <Upload size={17} />
-                {uploading ? "Uploading..." : "Upload CSV"}
-              </button>
-
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 border px-4 py-2 rounded-lg"
-              >
-                <Download size={17} />
-                Export
-              </button>
-            </div>
+            <p className="text-sm text-[#927F71] mt-1">
+              Your 5 latest uploaded invoice records
+            </p>
           </div>
 
-          {exportMessage && (
-            <p className="text-sm text-green-600 mb-4">
-              {exportMessage}
-            </p>
-          )}
-
-          {uploadMessage && (
-            <p className="text-sm text-green-600 mb-4">
-              {uploadMessage}
-            </p>
-          )}
-
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-          />
-
           <InvoiceTable
-            invoices={invoices.filter(
-              (inv) =>
-                inv.invoiceNumber
-                  ?.toLowerCase()
-                  .includes(searchTerm.toLowerCase()) ||
-                inv.sellerGstin
-                  ?.toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-            )}
+            invoices={recentInvoices}
             loading={loading}
             error={error}
           />
+
         </section>
       )}
 
       {/* Invoice Issues Tab */}
       {activeTab === "issues" && (
-        <section className="bg-white rounded-xl shadow-sm p-6">
+        <section className="bg-white border border-[#E9DED3] rounded-2xl shadow-sm p-6">
+
           {/* Issue Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
 
-        <StatCard
-          icon={AlertTriangle}
-          title="Total Issues"
-          value={invoiceIssues.length}
-          color="text-blue-600"
-        />
+            <StatCard
+              icon={AlertTriangle}
+              title="Total Issues"
+              value={invoiceIssues.length}
+              color="text-[#96745B]"
+            />
 
-        <StatCard
-          icon={AlertTriangle}
-          title="High Severity"
-          value={invoiceIssues.filter((issue) => issue.severity === "HIGH").length}
-          color="text-red-600"
-        />
+            <StatCard
+              icon={AlertTriangle}
+              title="High Severity"
+              value={invoiceIssues.filter((issue) => issue.severity === "HIGH").length}
+              color="text-red-600"
+            />
 
-        <StatCard
-          icon={AlertTriangle}
-          title="Medium Severity"
-          value={invoiceIssues.filter((issue) => issue.severity === "MEDIUM").length}
-          color="text-yellow-500"
-        />
+            <StatCard
+              icon={AlertTriangle}
+              title="Medium Severity"
+              value={invoiceIssues.filter((issue) => issue.severity === "MEDIUM").length}
+              color="text-yellow-600"
+            />
 
-        <StatCard
-          icon={AlertTriangle}
-          title="Low Severity"
-          value={invoiceIssues.filter((issue) => issue.severity === "LOW").length}
-          color="text-green-600"
-        />
+            <StatCard
+              icon={AlertTriangle}
+              title="Low Severity"
+              value={invoiceIssues.filter((issue) => issue.severity === "LOW").length}
+              color="text-green-600"
+            />
 
-        <StatCard
-          icon={AlertTriangle}
-          title="Errors"
-          value={invoiceIssues.filter((issue) => issue.severity === "ERROR").length}
-          color="text-orange-600"
-        />
+            <StatCard
+              icon={AlertTriangle}
+              title="Errors"
+              value={invoiceIssues.filter((issue) => issue.severity === "ERROR").length}
+              color="text-orange-600"
+            />
 
-      </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-2">
+          </div>
+
+          <h3 className="text-xl font-bold text-[#493B35] mb-2">
             Invoice Issues
           </h3>
 
-          <p className="text-sm text-slate-500 mb-6">
+          <p className="text-sm text-[#927F71] mb-6">
             GST validation errors and detected anomalies
           </p>
+
           {/* Search and Severity Filter */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
 
@@ -288,13 +197,13 @@ function Dashboard({
               placeholder="Search by invoice ID, rule or description..."
               value={issueSearchTerm}
               onChange={(e) => setIssueSearchTerm(e.target.value)}
-              className="flex-1 border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 border border-[#E3D6C9] rounded-lg px-4 py-2 text-[#493B35] placeholder-[#A89586] outline-none focus:ring-2 focus:ring-[#C9A987] focus:border-[#96745B]"
             />
 
             <select
               value={severityFilter}
               onChange={(e) => setSeverityFilter(e.target.value)}
-              className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-[#E3D6C9] rounded-lg px-4 py-2 text-[#493B35] bg-white outline-none focus:ring-2 focus:ring-[#C9A987]"
             >
               <option value="ALL">All Severities</option>
               <option value="HIGH">High</option>
@@ -305,17 +214,20 @@ function Dashboard({
 
           </div>
 
-              {filteredIssues.length === 0 ? (
-                <p className="text-slate-500 py-4">
-                  {invoiceIssues.length === 0
-                    ? "No invoice issues found."
-                    : "No matching issues found."}
-                </p>
-              ) : (
+          {filteredIssues.length === 0 ? (
+            <p className="text-[#927F71] py-4">
+              {invoiceIssues.length === 0
+                ? "No invoice issues found."
+                : "No matching issues found."}
+            </p>
+          ) : (
+
             <div className="overflow-x-auto">
+
               <table className="w-full text-left">
+
                 <thead>
-                  <tr className="border-b text-slate-500 text-sm">
+                  <tr className="border-b border-[#E9DED3] text-[#806D60] text-sm bg-[#FAF7F3]">
                     <th className="p-3">Invoice ID</th>
                     <th className="p-3">Rule</th>
                     <th className="p-3">Description</th>
@@ -325,12 +237,21 @@ function Dashboard({
 
                 <tbody>
                   {filteredIssues.map((issue) => (
-                    <tr key={issue.id} className="border-b">
-                      <td className="p-3">{issue.invoiceId}</td>
+                    <tr
+                      key={issue.id}
+                      className="border-b border-[#F0E8E0] hover:bg-[#FCF9F5] transition-colors"
+                    >
+                      <td className="p-3 text-[#493B35]">
+                        {issue.invoiceId}
+                      </td>
 
-                      <td className="p-3">{issue.ruleCode}</td>
+                      <td className="p-3 text-[#805D48] font-medium">
+                        {issue.ruleCode}
+                      </td>
 
-                      <td className="p-3">{issue.message}</td>
+                      <td className="p-3 text-[#65564D]">
+                        {issue.message}
+                      </td>
 
                       <td className="p-3">
                         <span
@@ -339,7 +260,9 @@ function Dashboard({
                               ? "bg-red-100 text-red-700"
                               : issue.severity === "ERROR"
                               ? "bg-orange-100 text-orange-700"
-                              : "bg-yellow-100 text-yellow-700"
+                              : issue.severity === "MEDIUM"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
                           }`}
                         >
                           {issue.severity}
@@ -348,11 +271,15 @@ function Dashboard({
                     </tr>
                   ))}
                 </tbody>
+
               </table>
+
             </div>
           )}
+
         </section>
       )}
+
     </main>
   );
 }

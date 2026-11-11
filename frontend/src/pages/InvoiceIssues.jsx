@@ -28,22 +28,26 @@ function InvoiceIssues() {
   });
 
   return (
-    <main className="flex-1 p-8">
-      <h2 className="text-2xl font-bold text-slate-800 mb-2">
-        Invoice Issues
-      </h2>
+    <main className="flex-1 min-h-screen bg-[#F5F0E9] p-6 md:p-8 text-[#493B35]">
 
-      <p className="text-slate-500 mb-6">
-        GST validation errors and detected anomalies
-      </p>
+      <div className="mb-7">
+        <h2 className="text-2xl font-bold text-[#493B35] mb-2">
+          Invoice Issues
+        </h2>
+
+        <p className="text-[#927F71]">
+          GST validation errors and detected anomalies
+        </p>
+      </div>
 
       {/* Issue Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-7">
+
         <StatCard
           icon={AlertTriangle}
           title="Total Issues"
           value={invoiceIssues.length}
-          color="text-blue-600"
+          color="text-[#96745B]"
         />
 
         <StatCard
@@ -57,7 +61,7 @@ function InvoiceIssues() {
           icon={AlertTriangle}
           title="Medium Severity"
           value={invoiceIssues.filter((i) => i.severity === "MEDIUM").length}
-          color="text-yellow-500"
+          color="text-yellow-600"
         />
 
         <StatCard
@@ -73,23 +77,26 @@ function InvoiceIssues() {
           value={invoiceIssues.filter((i) => i.severity === "ERROR").length}
           color="text-orange-600"
         />
+
       </section>
 
-      {/* Search and Filter */}
-      <section className="bg-white rounded-xl shadow-sm p-6">
+      {/* Search, Filter and Issues Table */}
+      <section className="bg-white border border-[#E9DED3] rounded-2xl shadow-sm p-6">
+
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
+
           <input
             type="text"
             placeholder="Search by invoice ID, rule or description..."
             value={issueSearchTerm}
             onChange={(e) => setIssueSearchTerm(e.target.value)}
-            className="flex-1 border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border border-[#E3D6C9] rounded-lg px-4 py-2 text-[#493B35] placeholder-[#A89586] outline-none focus:ring-2 focus:ring-[#C9A987] focus:border-[#96745B]"
           />
 
           <select
             value={severityFilter}
             onChange={(e) => setSeverityFilter(e.target.value)}
-            className="border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-[#E3D6C9] rounded-lg px-4 py-2 text-[#493B35] bg-white outline-none focus:ring-2 focus:ring-[#C9A987]"
           >
             <option value="ALL">All Severities</option>
             <option value="HIGH">High</option>
@@ -97,20 +104,24 @@ function InvoiceIssues() {
             <option value="LOW">Low</option>
             <option value="ERROR">Error</option>
           </select>
+
         </div>
 
         {/* Issues Table */}
         {filteredIssues.length === 0 ? (
-          <p className="text-slate-500 py-4">
+          <p className="text-[#927F71] py-4">
             {invoiceIssues.length === 0
               ? "No invoice issues found."
               : "No matching issues found."}
           </p>
         ) : (
+
           <div className="overflow-x-auto">
+
             <table className="w-full text-left">
+
               <thead>
-                <tr className="border-b text-slate-500 text-sm">
+                <tr className="border-b border-[#E9DED3] text-[#806D60] text-sm bg-[#FAF7F3]">
                   <th className="p-3">Invoice ID</th>
                   <th className="p-3">Rule</th>
                   <th className="p-3">Description</th>
@@ -120,10 +131,22 @@ function InvoiceIssues() {
 
               <tbody>
                 {filteredIssues.map((issue) => (
-                  <tr key={issue.id} className="border-b">
-                    <td className="p-3">{issue.invoiceId}</td>
-                    <td className="p-3">{issue.ruleCode}</td>
-                    <td className="p-3">{issue.message}</td>
+                  <tr
+                    key={issue.id}
+                    className="border-b border-[#F0E8E0] hover:bg-[#FCF9F5] transition-colors"
+                  >
+                    <td className="p-3 text-[#493B35]">
+                      {issue.invoiceId}
+                    </td>
+
+                    <td className="p-3 text-[#805D48] font-medium">
+                      {issue.ruleCode}
+                    </td>
+
+                    <td className="p-3 text-[#65564D]">
+                      {issue.message}
+                    </td>
+
                     <td className="p-3">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -142,9 +165,12 @@ function InvoiceIssues() {
                   </tr>
                 ))}
               </tbody>
+
             </table>
+
           </div>
         )}
+
       </section>
     </main>
   );
