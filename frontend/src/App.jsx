@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./pages/Dashboard";
+import RecentInvoices from "./pages/RecentInvoices";
+import InvoiceIssues from "./pages/InvoiceIssues";
+
 import { getInvoices } from "./services/invoiceService";
 
 function App() {
+  const [activePage, setActivePage] = useState("dashboard");
+
   const [searchTerm, setSearchTerm] = useState("");
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,16 +33,36 @@ function App() {
 
   return (
     <div className="flex min-h-screen bg-slate-100">
-      <Sidebar />
-
-      <Dashboard
-        invoices={invoices}
-        loading={loading}
-        error={error}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        onInvoicesUpdated={handleInvoicesUpdated}
+      <Sidebar
+        activePage={activePage}
+        setActivePage={setActivePage}
       />
+
+      {activePage === "dashboard" && (
+        <Dashboard
+          invoices={invoices}
+          loading={loading}
+          error={error}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onInvoicesUpdated={handleInvoicesUpdated}
+        />
+      )}
+
+      {activePage === "invoices" && (
+        <RecentInvoices
+          invoices={invoices}
+          loading={loading}
+          error={error}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onInvoicesUpdated={handleInvoicesUpdated}
+        />
+      )}
+
+      {activePage === "issues" && (
+        <InvoiceIssues />
+      )}
     </div>
   );
 }

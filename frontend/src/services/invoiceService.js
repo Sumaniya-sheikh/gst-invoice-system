@@ -25,3 +25,17 @@ export const uploadCsv = async (file) => {
 
   return response.json();
 };
+
+export const exportInvoicesCsv = () => {
+  window.location.href = `${API_URL}/export`;
+};
+
+export const getInvoiceIssues = async () => {
+  const response = await fetch(`${API_URL}/issues`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch invoice issues");
+  }
+
+  return response.json();
+};
