@@ -1,3 +1,4 @@
+
 package com.gstcompliance.gstinvoicesystem.entity;
 
 import jakarta.persistence.Column;
@@ -11,17 +12,21 @@ import lombok.Data;
 @Entity
 @Table(name = "users")
 @Data
-public class User{
+public class User {
+
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
     private String username;
-    
+
     @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
-    private String role; // "BUSINESS_USER" or "ADMIN"
+    private String role;
+
+    @Column(nullable = false)
+    private boolean active = true;
 }

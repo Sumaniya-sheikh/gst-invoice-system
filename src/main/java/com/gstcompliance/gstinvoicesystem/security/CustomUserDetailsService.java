@@ -1,3 +1,4 @@
+
 package com.gstcompliance.gstinvoicesystem.security;
 
 import com.gstcompliance.gstinvoicesystem.entity.User;
@@ -28,6 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
                 .authorities("ROLE_" + user.getRole())
+                .disabled(!user.isActive())
                 .build();
     }
 }

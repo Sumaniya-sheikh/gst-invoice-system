@@ -68,12 +68,12 @@ public class SecurityConfig {
 
             .authenticationProvider(authenticationProvider)
 
-            .authorizeHttpRequests(auth -> auth
+              .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
 
