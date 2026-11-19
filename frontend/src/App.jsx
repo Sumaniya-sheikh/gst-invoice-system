@@ -12,6 +12,9 @@ import AuthAction from "./pages/AuthAction";
 import VendorManagement from "./pages/VendorManagement";
 import PaymentTracking from "./pages/PaymentTracking";
 import MonthlyGstSummary from "./pages/MonthlyGstSummary";
+import Registers from "./pages/Registers";
+import AuditHistory from "./pages/AuditHistory";
+import VendorRisk from "./pages/VendorRisk";
 
 import { getInvoices } from "./services/invoiceService";
 import {
@@ -26,7 +29,6 @@ function App() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -34,10 +36,7 @@ function App() {
     const checkSession = async () => {
       try {
         const user = await getCurrentUser();
-
-        if (user) {
-          setCurrentUser(user);
-        }
+        if (user) setCurrentUser(user);
       } catch (err) {
         console.error("Session check failed:", err);
       } finally {
@@ -55,25 +54,16 @@ function App() {
     setError("");
 
     getInvoices()
-      .then((data) => {
-        setInvoices(data);
-      })
-      .catch((err) => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .then(setInvoices)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, [currentUser]);
 
-  const handleLogin = (user) => {
-    setCurrentUser(user);
-  };
+  const handleLogin = (user) => setCurrentUser(user);
 
   const handleLogout = async () => {
     try {
       await logoutUser();
-
       setCurrentUser(null);
       setInvoices([]);
       setActivePage("dashboard");
@@ -99,9 +89,7 @@ function App() {
     );
   }
 
-  if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
-  }
+  if (!currentUser) return <Login onLogin={handleLogin} />;
 
   return (
     <div className="flex min-h-screen bg-[#F5F0E9]">
@@ -135,10 +123,13 @@ function App() {
       )}
 
       {activePage === "issues" && <InvoiceIssues />}
-
       {activePage === "vendors" && <VendorManagement />}
       {activePage === "payments" && <PaymentTracking />}
       {activePage === "gst-summary" && <MonthlyGstSummary />}
+      {activePage === "registers" && <Registers />}
+      {activePage === "audit" && <AuditHistory />}
+      {activePage === "vendor-risk" && <VendorRisk />}
+
       {activePage === "account" && (
         <Account
           currentUser={currentUser}

@@ -1,3 +1,4 @@
+
 package com.gstcompliance.gstinvoicesystem.service;
 
 import java.io.BufferedReader;
@@ -7,19 +8,19 @@ import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDateTime;
-import com.gstcompliance.gstinvoicesystem.dto.InvoiceCorrectionRequest;
-import com.gstcompliance.gstinvoicesystem.entity.InvoiceCorrection;
-import com.gstcompliance.gstinvoicesystem.repository.InvoiceCorrectionRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.gstcompliance.gstinvoicesystem.dto.InvoiceCorrectionRequest;
 import com.gstcompliance.gstinvoicesystem.entity.Invoice;
+import com.gstcompliance.gstinvoicesystem.entity.InvoiceCorrection;
 import com.gstcompliance.gstinvoicesystem.entity.InvoiceIssue;
+import com.gstcompliance.gstinvoicesystem.repository.InvoiceCorrectionRepository;
 import com.gstcompliance.gstinvoicesystem.repository.InvoiceIssueRepository;
 import com.gstcompliance.gstinvoicesystem.repository.InvoiceRepository;
 import com.gstcompliance.gstinvoicesystem.validation.GstinValidator;
@@ -34,9 +35,13 @@ public class InvoiceService {
     private final InvoiceIssueRepository issueRepository;
     private final InvoiceCorrectionRepository correctionRepository;
 
-
+    // Correct an invoice and save its correction history.
     @Transactional
-    public Invoice correctInvoice(Long invoiceId, InvoiceCorrectionRequest request, String correctedBy) {
+    public Invoice correctInvoice(
+            Long invoiceId,
+            InvoiceCorrectionRequest request,
+            String correctedBy) {
+
         Invoice invoice = invoiceRepository.findById(invoiceId)
                 .orElseThrow(() -> new IllegalArgumentException("Invoice not found"));
 
@@ -57,8 +62,11 @@ public class InvoiceService {
         invoiceRepository.save(invoice);
 
         issueRepository.deleteByInvoiceId(invoiceId);
+
         List<InvoiceIssue> updatedIssues = new ArrayList<>();
+
         analyseInvoice(invoice, updatedIssues);
+
         invoiceRepository.save(invoice);
         issueRepository.saveAll(updatedIssues);
 
@@ -69,23 +77,33 @@ public class InvoiceService {
         history.setBeforeValues(before);
         history.setAfterValues(toJson(invoice));
         history.setReason(request.reason());
+
         correctionRepository.save(history);
 
         return invoice;
     }
 
+    // Get correction history for an invoice.
     @Transactional(readOnly = true)
     public List<InvoiceCorrection> getCorrectionHistory(Long invoiceId) {
+
         if (!invoiceRepository.existsById(invoiceId)) {
             throw new IllegalArgumentException("Invoice not found");
         }
-        return correctionRepository.findByInvoiceIdOrderByCorrectedAtDesc(invoiceId);
+
+        return correctionRepository
+                .findByInvoiceIdOrderByCorrectedAtDesc(invoiceId);
     }
 
+    // Convert invoice details into JSON for audit history.
     private String toJson(Invoice invoice) {
+
         return "{"
                 + "\"invoiceNumber\":" + jsonString(invoice.getInvoiceNumber()) + ","
-                + "\"invoiceDate\":" + jsonString(invoice.getInvoiceDate() == null ? null : invoice.getInvoiceDate().toString()) + ","
+                + "\"invoiceDate\":" + jsonString(
+                        invoice.getInvoiceDate() == null
+                                ? null
+                                : invoice.getInvoiceDate().toString()) + ","
                 + "\"sellerGstin\":" + jsonString(invoice.getSellerGstin()) + ","
                 + "\"buyerGstin\":" + jsonString(invoice.getBuyerGstin()) + ","
                 + "\"sellerStateCode\":" + jsonString(invoice.getSellerStateCode()) + ","
@@ -103,18 +121,24 @@ public class InvoiceService {
     }
 
     private String jsonString(String value) {
-        if (value == null) return "null";
+
+        if (value == null) {
+            return "null";
+        }
+
         return "\"" + value.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r") + "\"";
     }
 
+    // Get all invoices.
     @Transactional(readOnly = true)
     public List<Invoice> findAll() {
         return invoiceRepository.findAll();
     }
 
+    // Get all invoice issues.
     @Transactional(readOnly = true)
     public List<InvoiceIssue> findAllIssues() {
         return issueRepository.findAll();
@@ -127,20 +151,23 @@ public class InvoiceService {
         List<Invoice> invoices = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(
+                        file.getInputStream(),
+                        StandardCharsets.UTF_8))) {
 
             int rowNumber = 0;
             String line;
 
             while ((line = reader.readLine()) != null) {
+
                 rowNumber++;
 
                 if (line.isBlank()) {
                     continue;
                 }
 
-                if (rowNumber == 1
-                        && line.trim().toLowerCase().startsWith("invoice number,")) {
+                // Skip first and repeated CSV header rows.
+                if (isCsvHeaderRow(line)) {
                     continue;
                 }
 
@@ -148,6 +175,7 @@ public class InvoiceService {
             }
 
         } catch (IOException e) {
+
             throw new UncheckedIOException(
                     "Could not read uploaded file", e
             );
@@ -165,6 +193,26 @@ public class InvoiceService {
         issueRepository.saveAll(issues);
 
         return saved.size();
+    }
+
+    // Detect CSV headers, repeated headers and UTF-8 BOM.
+    private boolean isCsvHeaderRow(String line) {
+
+        String[] fields = line
+                .replace("\uFEFF", "")
+                .split(",", -1);
+
+        if (fields.length == 0) {
+            return false;
+        }
+
+        String firstColumn = fields[0]
+                .trim()
+                .replaceAll("[^a-zA-Z0-9]", "")
+                .toLowerCase();
+
+        return firstColumn.equals("invoicenumber")
+                || firstColumn.equals("invoiceno");
     }
 
     // Recheck all existing invoices and rebuild their issue records.
@@ -188,7 +236,9 @@ public class InvoiceService {
     }
 
     // Apply all validation rules to one invoice.
-    private void analyseInvoice(Invoice inv, List<InvoiceIssue> issues) {
+    private void analyseInvoice(
+            Invoice inv,
+            List<InvoiceIssue> issues) {
 
         flagMissingInvoiceNumber(issues, inv);
         flagMissingInvoiceDate(issues, inv);
@@ -208,10 +258,9 @@ public class InvoiceService {
         );
 
         flagTaxIssues(issues, inv);
-
         flagNegativeAmounts(issues, inv);
 
-        // Check duplicates only when the required matching fields exist.
+        // Check duplicates only when required fields exist.
         boolean earlierDuplicate = false;
 
         if (inv.getInvoiceNumber() != null
@@ -232,6 +281,7 @@ public class InvoiceService {
         }
 
         if (earlierDuplicate) {
+
             createIssue(
                     issues,
                     inv,
@@ -296,7 +346,7 @@ public class InvoiceService {
         }
     }
 
-    // GSTIN validation, including separate missing GSTIN rules.
+    // GSTIN validation.
     private void flagGstin(
             List<InvoiceIssue> issues,
             Invoice inv,
@@ -331,7 +381,7 @@ public class InvoiceService {
         );
     }
 
-    // Compare GSTIN digits with invoice state.
+    // Compare GSTIN state code with invoice state code.
     private void flagGstinStateMismatch(
             List<InvoiceIssue> issues,
             Invoice inv,
@@ -361,7 +411,9 @@ public class InvoiceService {
     }
 
     // GST tax validation.
-    private void flagTaxIssues(List<InvoiceIssue> issues, Invoice inv) {
+    private void flagTaxIssues(
+            List<InvoiceIssue> issues,
+            Invoice inv) {
 
         BigDecimal cgst = valueOrZero(inv.getCgstAmount());
         BigDecimal sgst = valueOrZero(inv.getSgstAmount());
@@ -372,11 +424,13 @@ public class InvoiceService {
         String buyerState = inv.getBuyerStateCode();
 
         if (sellerState != null && buyerState != null
-                && !sellerState.isBlank() && !buyerState.isBlank()) {
+                && !sellerState.isBlank()
+                && !buyerState.isBlank()) {
 
             if (sellerState.trim().equals(buyerState.trim())) {
 
                 if (igst.compareTo(BigDecimal.ZERO) != 0) {
+
                     createIssue(
                             issues,
                             inv,
@@ -387,6 +441,7 @@ public class InvoiceService {
                 }
 
                 if (cgst.compareTo(sgst) != 0) {
+
                     createIssue(
                             issues,
                             inv,
@@ -418,7 +473,8 @@ public class InvoiceService {
                 .add(igst);
 
         if (inv.getTotalInvoiceValue() == null
-                || expectedTotal.compareTo(inv.getTotalInvoiceValue()) != 0) {
+                || expectedTotal.compareTo(
+                        inv.getTotalInvoiceValue()) != 0) {
 
             createIssue(
                     issues,
@@ -431,17 +487,24 @@ public class InvoiceService {
     }
 
     // Flag negative invoice amounts.
-    private void flagNegativeAmounts(List<InvoiceIssue> issues, Invoice inv) {
+    private void flagNegativeAmounts(
+            List<InvoiceIssue> issues,
+            Invoice inv) {
 
         boolean hasNegativeAmount =
-                (inv.getTaxableValue() != null && inv.getTaxableValue().signum() < 0)
-                || (inv.getCgstAmount() != null && inv.getCgstAmount().signum() < 0)
-                || (inv.getSgstAmount() != null && inv.getSgstAmount().signum() < 0)
-                || (inv.getIgstAmount() != null && inv.getIgstAmount().signum() < 0)
+                (inv.getTaxableValue() != null
+                        && inv.getTaxableValue().signum() < 0)
+                || (inv.getCgstAmount() != null
+                        && inv.getCgstAmount().signum() < 0)
+                || (inv.getSgstAmount() != null
+                        && inv.getSgstAmount().signum() < 0)
+                || (inv.getIgstAmount() != null
+                        && inv.getIgstAmount().signum() < 0)
                 || (inv.getTotalInvoiceValue() != null
                         && inv.getTotalInvoiceValue().signum() < 0);
 
         if (hasNegativeAmount) {
+
             createIssue(
                     issues,
                     inv,
@@ -456,7 +519,7 @@ public class InvoiceService {
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    // Calculate risk using only the issues belonging to this invoice.
+    // Calculate risk using issues belonging to this invoice.
     private String calculateRiskLevel(
             Invoice inv,
             List<InvoiceIssue> issues) {
@@ -498,14 +561,17 @@ public class InvoiceService {
         issues.add(issue);
     }
 
-    // CSV row parsing.
+    // Parse one CSV row.
     private Invoice parseRow(String line, int rowNumber) {
 
         String[] fields = line.split(",", -1);
 
         if (fields.length != 11) {
+
             throw new IllegalArgumentException(
-                    "Row " + rowNumber + ": expected 11 columns but found " + fields.length
+                    "Row " + rowNumber
+                            + ": expected 11 columns but found "
+                            + fields.length
             );
         }
 
@@ -515,7 +581,6 @@ public class InvoiceService {
 
             inv.setInvoiceNumber(fields[0].trim());
 
-            // Allow missing date.
             inv.setInvoiceDate(
                     fields[1].isBlank()
                             ? null
@@ -528,7 +593,6 @@ public class InvoiceService {
             inv.setSellerStateCode(fields[4].trim());
             inv.setBuyerStateCode(fields[5].trim());
 
-            // Allow missing taxable value.
             inv.setTaxableValue(
                     fields[6].isBlank()
                             ? null
@@ -545,7 +609,8 @@ public class InvoiceService {
         } catch (RuntimeException e) {
 
             throw new IllegalArgumentException(
-                    "Row " + rowNumber + ": invalid value (" + e.getMessage() + ")"
+                    "Row " + rowNumber
+                            + ": invalid value (" + e.getMessage() + ")"
             );
         }
     }
@@ -558,23 +623,23 @@ public class InvoiceService {
         StringBuilder csv = new StringBuilder();
 
         csv.append("Invoice Number,Invoice Date,Seller GSTIN,Buyer GSTIN,")
-           .append("Seller State,Buyer State,Taxable Value,CGST,SGST,")
-           .append("IGST,Total Invoice Value,Risk Level\n");
+                .append("Seller State,Buyer State,Taxable Value,CGST,SGST,")
+                .append("IGST,Total Invoice Value,Risk Level\n");
 
         for (Invoice inv : invoices) {
 
             csv.append(inv.getInvoiceNumber()).append(",")
-               .append(inv.getInvoiceDate()).append(",")
-               .append(inv.getSellerGstin()).append(",")
-               .append(inv.getBuyerGstin()).append(",")
-               .append(inv.getSellerStateCode()).append(",")
-               .append(inv.getBuyerStateCode()).append(",")
-               .append(inv.getTaxableValue()).append(",")
-               .append(inv.getCgstAmount()).append(",")
-               .append(inv.getSgstAmount()).append(",")
-               .append(inv.getIgstAmount()).append(",")
-               .append(inv.getTotalInvoiceValue()).append(",")
-               .append(inv.getRiskLevel()).append("\n");
+                    .append(inv.getInvoiceDate()).append(",")
+                    .append(inv.getSellerGstin()).append(",")
+                    .append(inv.getBuyerGstin()).append(",")
+                    .append(inv.getSellerStateCode()).append(",")
+                    .append(inv.getBuyerStateCode()).append(",")
+                    .append(inv.getTaxableValue()).append(",")
+                    .append(inv.getCgstAmount()).append(",")
+                    .append(inv.getSgstAmount()).append(",")
+                    .append(inv.getIgstAmount()).append(",")
+                    .append(inv.getTotalInvoiceValue()).append(",")
+                    .append(inv.getRiskLevel()).append("\n");
         }
 
         return csv.toString();
