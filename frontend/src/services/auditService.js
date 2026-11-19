@@ -1,7 +1,9 @@
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
 export const getAllAuditHistory = async () => {
   const response = await fetch(
-    "http://localhost:8080/api/audit",
+    `${API_BASE_URL}/api/audit`,
     { credentials: "include" }
   );
 
@@ -14,7 +16,7 @@ export const getAllAuditHistory = async () => {
 
 export const getInvoiceAuditHistory = async (invoiceId) => {
   const response = await fetch(
-    `http://localhost:8080/api/audit/invoice/${invoiceId}`,
+    `${API_BASE_URL}/api/audit/invoice/${invoiceId}`,
     { credentials: "include" }
   );
 

@@ -1,6 +1,8 @@
 
-const AUTH_URL = "http://localhost:8080/api/auth";
-const ADMIN_URL = "http://localhost:8080/api/admin/users";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
+const ADMIN_URL = `${API_BASE_URL}/api/admin/users`;
 
 export const getCsrfToken = async () => {
   const response = await fetch(`${AUTH_URL}/csrf`, {
@@ -60,7 +62,6 @@ export const updateEmail = (email) =>
 export const resendVerification = () =>
   request(`${AUTH_URL}/send-verification`, "POST", {});
 
-// New: resend verification without logging in.
 export const resendVerificationByEmail = (email) =>
   request(`${AUTH_URL}/resend-verification`, "POST", { email });
 

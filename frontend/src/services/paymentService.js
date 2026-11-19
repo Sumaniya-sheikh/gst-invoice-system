@@ -1,6 +1,6 @@
-
-const API_URL = "http://localhost:8080/api/payments";
-const AUTH_URL = "http://localhost:8080/api/auth";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const API_URL = `${API_BASE_URL}/api/payments`;
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
 
 const getCsrfToken = async () => {
   const response = await fetch(`${AUTH_URL}/csrf`, {
@@ -37,30 +37,27 @@ export const getAllPayments = async () => {
 
 // Get payments for an invoice.
 export const getInvoicePayments = async (invoiceId) => {
-  const response = await fetch(
-    `${API_URL}/invoice/${invoiceId}`,
-    { credentials: "include" }
-  );
+  const response = await fetch(`${API_URL}/invoice/${invoiceId}`, {
+    credentials: "include",
+  });
 
   return handleResponse(response);
 };
 
 // Get total amount paid.
 export const getTotalPaid = async (invoiceId) => {
-  const response = await fetch(
-    `${API_URL}/invoice/${invoiceId}/paid`,
-    { credentials: "include" }
-  );
+  const response = await fetch(`${API_URL}/invoice/${invoiceId}/paid`, {
+    credentials: "include",
+  });
 
   return handleResponse(response);
 };
 
 // Get outstanding balance.
 export const getOutstandingBalance = async (invoiceId) => {
-  const response = await fetch(
-    `${API_URL}/invoice/${invoiceId}/balance`,
-    { credentials: "include" }
-  );
+  const response = await fetch(`${API_URL}/invoice/${invoiceId}/balance`, {
+    credentials: "include",
+  });
 
   return handleResponse(response);
 };
@@ -69,18 +66,15 @@ export const getOutstandingBalance = async (invoiceId) => {
 export const addPayment = async (invoiceId, payment) => {
   const csrfToken = await getCsrfToken();
 
-  const response = await fetch(
-    `${API_URL}/invoice/${invoiceId}`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-XSRF-TOKEN": csrfToken,
-      },
-      body: JSON.stringify(payment),
-    }
-  );
+  const response = await fetch(`${API_URL}/invoice/${invoiceId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-XSRF-TOKEN": csrfToken,
+    },
+    body: JSON.stringify(payment),
+  });
 
   return handleResponse(response);
 };

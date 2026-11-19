@@ -1,6 +1,8 @@
 
-const API_URL = "http://localhost:8080/api/invoices";
-const AUTH_URL = "http://localhost:8080/api/auth";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+
+const API_URL = `${API_BASE_URL}/api/invoices`;
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
 
 // Get CSRF token for POST requests.
 const getCsrfToken = async () => {
@@ -46,7 +48,7 @@ export const uploadCsv = async (file) => {
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
+    const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || "CSV upload failed");
   }
 
@@ -90,10 +92,10 @@ export const getInvoiceIssues = async () => {
   return response.json();
 };
 
-// Apply an approved invoice correction. The backend records before/after values
-// and reruns all validation rules for the invoice.
+// Apply an approved invoice correction.
 export const updateInvoiceCorrection = async (invoiceId, payload) => {
   const csrfToken = await getCsrfToken();
+
   const response = await fetch(`${API_URL}/${invoiceId}/correction`, {
     method: "PUT",
     credentials: "include",
@@ -103,10 +105,12 @@ export const updateInvoiceCorrection = async (invoiceId, payload) => {
     },
     body: JSON.stringify(payload),
   });
+
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(data.error || data.message || "Invoice correction failed");
   }
+
   return response.json();
 };
 
@@ -114,6 +118,10 @@ export const getInvoiceCorrectionHistory = async (invoiceId) => {
   const response = await fetch(`${API_URL}/${invoiceId}/corrections`, {
     credentials: "include",
   });
-  if (!response.ok) throw new Error("Failed to load correction history");
+
+  if (!response.ok) {
+    throw new Error("Failed to load correction history");
+  }
+
   return response.json();
 };
