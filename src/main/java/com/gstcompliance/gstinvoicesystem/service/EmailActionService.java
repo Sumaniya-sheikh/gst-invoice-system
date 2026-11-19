@@ -35,7 +35,7 @@ public class EmailActionService {
     private final EmailActionTokenRepository tokenRepository;
     private final UserRepository userRepository;
 
-    @Value("${app.frontend-url:http://localhost:5173}")
+    @Value("${app.frontend-url:https://gst-invoice-system-jet.vercel.app}")
     private String frontendUrl;
 
     @Value("${app.email-verification.expiry-minutes:30}")

@@ -28,7 +28,10 @@ import com.gstcompliance.gstinvoicesystem.service.InvoiceService;
 
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://gst-invoice-system-jet.vercel.app"
+})
 @RestController
 @RequestMapping("/api/invoices")
 @RequiredArgsConstructor

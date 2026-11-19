@@ -15,7 +15,10 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/payments")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://gst-invoice-system-jet.vercel.app"
+})
 @RequiredArgsConstructor
 public class PaymentController {
 

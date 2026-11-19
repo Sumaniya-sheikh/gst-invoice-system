@@ -92,7 +92,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-            List.of("http://localhost:5173")
+            List.of(
+                "http://localhost:5173",
+                "https://gst-invoice-system-jet.vercel.app"
+            )
         );
 
         configuration.setAllowedMethods(
