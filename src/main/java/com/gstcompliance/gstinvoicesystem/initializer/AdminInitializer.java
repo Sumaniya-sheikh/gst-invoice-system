@@ -51,6 +51,11 @@ public class AdminInitializer implements ApplicationRunner {
         admin.setUsername(username);
         admin.setPassword(passwordEncoder.encode(password));
         admin.setRole("ADMIN");
+        String email = System.getenv("APP_ADMIN_EMAIL");
+        if (email != null && !email.isBlank()) {
+            admin.setEmail(email.trim().toLowerCase());
+            admin.setEmailVerified(false);
+        }
 
         userRepository.save(admin);
 

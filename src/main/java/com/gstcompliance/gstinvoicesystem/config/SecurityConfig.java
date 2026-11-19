@@ -1,3 +1,4 @@
+
 package com.gstcompliance.gstinvoicesystem.config;
 
 import com.gstcompliance.gstinvoicesystem.security.CustomUserDetailsService;
@@ -68,12 +69,13 @@ public class SecurityConfig {
 
             .authenticationProvider(authenticationProvider)
 
-              .authorizeHttpRequests(auth -> auth
+            .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
+
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
 
@@ -90,15 +92,15 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
+            List.of("http://localhost:5173")
         );
 
         configuration.setAllowedMethods(
-                List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
 
         configuration.setAllowedHeaders(
-                List.of("Content-Type", "X-XSRF-TOKEN")
+            List.of("Content-Type", "X-XSRF-TOKEN")
         );
 
         configuration.setAllowCredentials(true);

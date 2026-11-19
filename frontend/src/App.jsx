@@ -6,6 +6,12 @@ import Dashboard from "./pages/Dashboard";
 import RecentInvoices from "./pages/RecentInvoices";
 import InvoiceIssues from "./pages/InvoiceIssues";
 import Login from "./pages/Login";
+import Account from "./pages/Account";
+import AdminUsers from "./pages/AdminUsers";
+import AuthAction from "./pages/AuthAction";
+import VendorManagement from "./pages/VendorManagement";
+import PaymentTracking from "./pages/PaymentTracking";
+import MonthlyGstSummary from "./pages/MonthlyGstSummary";
 
 import { getInvoices } from "./services/invoiceService";
 import {
@@ -14,6 +20,7 @@ import {
 } from "./services/authService";
 
 function App() {
+  const actionPath = window.location.pathname;
   const [activePage, setActivePage] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [invoices, setInvoices] = useState([]);
@@ -81,6 +88,9 @@ function App() {
     setInvoices(updatedInvoices);
   };
 
+  if (actionPath === "/verify-email") return <AuthAction type="verify" />;
+  if (actionPath === "/reset-password") return <AuthAction type="reset" />;
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F5F0E9]">
@@ -107,9 +117,9 @@ function App() {
           invoices={invoices}
           loading={loading}
           error={error}
+          onInvoicesUpdated={handleInvoicesUpdated}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
-          onInvoicesUpdated={handleInvoicesUpdated}
         />
       )}
 
@@ -124,8 +134,20 @@ function App() {
         />
       )}
 
-      {activePage === "issues" && (
-        <InvoiceIssues />
+      {activePage === "issues" && <InvoiceIssues />}
+
+      {activePage === "vendors" && <VendorManagement />}
+      {activePage === "payments" && <PaymentTracking />}
+      {activePage === "gst-summary" && <MonthlyGstSummary />}
+      {activePage === "account" && (
+        <Account
+          currentUser={currentUser}
+          onUserUpdated={setCurrentUser}
+        />
+      )}
+
+      {activePage === "users" && currentUser.role === "ADMIN" && (
+        <AdminUsers />
       )}
     </div>
   );

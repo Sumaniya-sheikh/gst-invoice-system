@@ -128,6 +128,7 @@ function RecentInvoices({
           invoices={filteredInvoices}
           loading={loading}
           error={error}
+          onInvoicesUpdated={onInvoicesUpdated}
         />
 
       </section>

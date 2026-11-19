@@ -89,3 +89,31 @@ export const getInvoiceIssues = async () => {
 
   return response.json();
 };
+
+// Apply an approved invoice correction. The backend records before/after values
+// and reruns all validation rules for the invoice.
+export const updateInvoiceCorrection = async (invoiceId, payload) => {
+  const csrfToken = await getCsrfToken();
+  const response = await fetch(`${API_URL}/${invoiceId}/correction`, {
+    method: "PUT",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      "X-XSRF-TOKEN": csrfToken,
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || data.message || "Invoice correction failed");
+  }
+  return response.json();
+};
+
+export const getInvoiceCorrectionHistory = async (invoiceId) => {
+  const response = await fetch(`${API_URL}/${invoiceId}/corrections`, {
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Failed to load correction history");
+  return response.json();
+};

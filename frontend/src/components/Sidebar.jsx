@@ -1,18 +1,27 @@
-
 import {
   LayoutDashboard,
   FileText,
   AlertTriangle,
   UserRound,
   LogOut,
+  CalendarDays,
+  Building2,
+  CreditCard,
 } from "lucide-react";
 
 function Sidebar({ activePage, setActivePage, currentUser, onLogout }) {
-  const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "invoices", label: "Invoices", icon: FileText },
-    { id: "issues", label: "Anomalies", icon: AlertTriangle },
-  ];
+ const menuItems = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "invoices", label: "Invoices", icon: FileText },
+  { id: "issues", label: "Anomalies", icon: AlertTriangle },
+  { id: "vendors", label: "Vendor Management", icon: Building2 },
+  { id: "payments", label: "Payment Tracking", icon: CreditCard },
+  { id: "account", label: "Account Settings", icon: UserRound },
+  { id: "gst-summary", label: "Monthly GST Summary", icon: CalendarDays },
+  ...(currentUser?.role === "ADMIN"
+    ? [{ id: "users", label: "User Management", icon: UserRound }]
+    : []),
+];
 
   const roleLabel =
     currentUser?.role === "ADMIN"
@@ -21,7 +30,6 @@ function Sidebar({ activePage, setActivePage, currentUser, onLogout }) {
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-hidden bg-[#493B35] p-5 text-[#F5F0E9]">
-
       <h1 className="mb-10 text-xl font-bold tracking-wide">
         GST Compliance
       </h1>
@@ -71,7 +79,6 @@ function Sidebar({ activePage, setActivePage, currentUser, onLogout }) {
           Logout
         </button>
       </div>
-
     </aside>
   );
 }

@@ -14,7 +14,7 @@ import Header from "../components/Header";
 import StatCard from "../components/StatCard";
 import InvoiceTable from "../components/InvoiceTable";
 
-function Dashboard({ invoices, loading, error }) {
+function Dashboard({ invoices, loading, error, onInvoicesUpdated }) {
   const [activeTab, setActiveTab] = useState("invoices");
   const [invoiceIssues, setInvoiceIssues] = useState([]);
   const [issueSearchTerm, setIssueSearchTerm] = useState("");
@@ -132,6 +132,7 @@ function Dashboard({ invoices, loading, error }) {
             invoices={recentInvoices}
             loading={loading}
             error={error}
+            onInvoicesUpdated={onInvoicesUpdated}
           />
 
         </section>

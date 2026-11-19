@@ -1,7 +1,8 @@
 
 import { useEffect, useState } from "react";
 import RiskBadge from "./RiskBadge";
-import { getInvoiceIssues } from "../services/invoiceService";
+import { getInvoiceIssues, getInvoices } from "../services/invoiceService";
+import InvoiceCorrectionEditor from "./InvoiceCorrectionEditor";
 
 const issueExplanations = {
   GSTIN_MISSING: {
@@ -56,13 +57,15 @@ const issueExplanations = {
   },
 };
 
-function InvoiceTable({ invoices, loading, error }) {
+function InvoiceTable({ invoices, loading, error, onInvoicesUpdated }) {
   const [issues, setIssues] = useState([]);
   const [issuesLoading, setIssuesLoading] = useState(true);
   const [issuesError, setIssuesError] = useState("");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [correctionOpen, setCorrectionOpen] = useState(false);
 
   useEffect(() => {
+    setIssuesLoading(true);
     getInvoiceIssues()
       .then((data) => {
         setIssues(data);
@@ -72,7 +75,7 @@ function InvoiceTable({ invoices, loading, error }) {
         setIssuesError(err.message);
         setIssuesLoading(false);
       });
-  }, []);
+  }, [invoices]);
 
   const getInvoiceIssuesList = (invoiceId) => {
     return issues.filter(
@@ -283,7 +286,15 @@ function InvoiceTable({ invoices, loading, error }) {
 
             </div>
 
-            <div className="p-5 border-t border-[#E9DED3] flex justify-end">
+            <div className="p-5 border-t border-[#E9DED3] flex justify-between">
+              {["HIGH", "MEDIUM"].includes(selectedInvoice.riskLevel) ? (
+                <button
+                  onClick={() => setCorrectionOpen(true)}
+                  className="bg-[#96745B] text-white px-5 py-2 rounded-lg hover:bg-[#806047]"
+                >
+                  Correct Invoice
+                </button>
+              ) : <span />}
               <button
                 onClick={() => setSelectedInvoice(null)}
                 className="bg-[#493B35] text-white px-5 py-2 rounded-lg hover:bg-[#655247] transition-colors"
@@ -294,6 +305,17 @@ function InvoiceTable({ invoices, loading, error }) {
 
           </div>
         </div>
+      )}
+      {correctionOpen && selectedInvoice && (
+        <InvoiceCorrectionEditor
+          invoice={selectedInvoice}
+          onClose={() => setCorrectionOpen(false)}
+          onSaved={async () => {
+            const refreshed = await getInvoices();
+            onInvoicesUpdated?.(refreshed);
+            setSelectedInvoice(null);
+          }}
+        />
       )}
     </>
   );

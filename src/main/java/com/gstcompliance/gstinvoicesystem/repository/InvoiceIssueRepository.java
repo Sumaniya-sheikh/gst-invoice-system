@@ -9,4 +9,5 @@ import com.gstcompliance.gstinvoicesystem.entity.InvoiceIssue;
 public interface InvoiceIssueRepository extends JpaRepository<InvoiceIssue, Long> {
     List<InvoiceIssue> findByInvoiceId(Long invoiceId);
     List<InvoiceIssue> findByRuleCode(String ruleCode);
+    void deleteByInvoiceId(Long invoiceId);
 }
