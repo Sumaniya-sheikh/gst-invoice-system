@@ -35,7 +35,6 @@ public class SecurityConfig {
                 new DaoAuthenticationProvider(userDetailsService);
 
         provider.setPasswordEncoder(passwordEncoder);
-
         return provider;
     }
 
@@ -43,7 +42,6 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration configuration)
             throws Exception {
-
         return configuration.getAuthenticationManager();
     }
 
@@ -58,13 +56,18 @@ public class SecurityConfig {
             AuthenticationProvider authenticationProvider)
             throws Exception {
 
+        CookieCsrfTokenRepository csrfRepository =
+                CookieCsrfTokenRepository.withHttpOnlyFalse();
+
+        csrfRepository.setCookieCustomizer(cookie -> 
+                cookie.sameSite("None").secure(true)
+        );
+
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
             .csrf(csrf -> csrf
-                .csrfTokenRepository(
-                    CookieCsrfTokenRepository.withHttpOnlyFalse()
-                )
+                .csrfTokenRepository(csrfRepository)
             )
 
             .authenticationProvider(authenticationProvider)
@@ -91,20 +94,18 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-            List.of(
-                "http://localhost:5173",
-                "https://gst-invoice-system-jet.vercel.app"
-            )
-        );
+        configuration.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://gst-invoice-system-jet.vercel.app"
+        ));
 
-        configuration.setAllowedMethods(
-            List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        );
+        configuration.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
 
-        configuration.setAllowedHeaders(
-            List.of("Content-Type", "X-XSRF-TOKEN")
-        );
+        configuration.setAllowedHeaders(List.of(
+            "Content-Type", "X-XSRF-TOKEN"
+        ));
 
         configuration.setAllowCredentials(true);
 
